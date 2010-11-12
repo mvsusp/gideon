@@ -1,0 +1,9 @@
+%html
+  %head
+  %body
+    Word Count
+    Escolha o arquivo:
+    %form{ :action => 'upload', :enctype => 'multipart/form-data', :method => 'post' }
+      %input{ :type => 'file', :name => 'file'}
+      %input{ :type => 'text', :name => 'name'}
+      %input{ :type => 'submit'}
