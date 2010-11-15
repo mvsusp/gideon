@@ -1,17 +1,15 @@
 $(function() {
-	$.getJSON('next_page.json', function(data) {
-		result = reduce(data.url);
+	$.getJSON('/next_page.json', function(data) {
+		result = reduce(data);
 	});
 });
 
-reduce = function(url) {
-	$.getJSON(url+'?jsoncallback=?', function(data) {
+reduce = function(data) {
     result = word_count(data)
 		$.post('page', result, function(data) {
 			alert(data);
 		});
-	});
-}
+	}
 
 word_count = function(data) {
 		var sum = 0;
