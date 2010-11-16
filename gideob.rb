@@ -4,6 +4,7 @@ require 'haml'
 require 'mongo'
 require 'uri'
 require 'json'
+require 'ruby-debug/debugger'
 
 SINATRA_HOME = "localhost:4567"
 
@@ -12,7 +13,7 @@ def db
 end
 
 get '/crawler' do
-    haml :index
+  haml :index
 end
 
 get '/insert_data' do
@@ -26,6 +27,11 @@ post '/upload' do
   db['web_pages'].insert({ :name => filename, :pages => pages})
 end
 
+post '/submit_page' do
+  d = db['inner_pages'].update({ :_id => BSON::ObjectId(params[:id])},{ "$set" => {:results => params[:results]}})
+  'resultado armazenado' 
+end
+
 def map_pages(filename, file)
   tempfile = file[:tempfile]
   page_size = 500
@@ -35,7 +41,6 @@ def map_pages(filename, file)
     if index == 0 or (index - offset) > page_size
       inner_pages << {:page_name => filename, :slug => index, :url => "inner_page/#{filename}/#{index}", :page => ''}
       offset += page_size if (index - offset) > page_size
-      puts 'new page'
     end
     inner_pages.last[:page] += line
   end
@@ -55,7 +60,7 @@ get '/next_page.json' do
 end
 
 def get_next_page(web_page)
-  crawled_pages = db['inner_pages'].find({:page_name => web_page['name']}) 
+  crawled_pages = db['inner_pages'].find({:page_name => web_page['name'], :results => { :$exists => false }}) 
   if crawled_pages.count == 0
     web_page['pages'][0]
   else
