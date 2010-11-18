@@ -47,6 +47,22 @@ def map_pages(filename, file)
   inner_pages
 end
 
+REDUCE_FUNCTION = "
+  var sum = 0;
+  data.replace(',', '');
+  var words = data.split(/ /).sort();
+  result = {};
+  for (var i = 0; i < words.length; i++) {
+    var word = words[i];
+    if (result[word]) {
+      result[word] += 1;
+    } else {
+      result[word] = 1;
+    }
+  }
+  return result;
+"
+
 get '/next_page.json' do
   content_type :json
 
@@ -56,7 +72,7 @@ get '/next_page.json' do
   next_page = get_next_page(web_page)
   a = db['inner_pages'].insert(next_page)
 
-  next_page.to_json
+  {:func => REDUCE_FUNCTION, :inner_page => next_page}.to_json
 end
 
 def get_next_page(web_page)
@@ -64,6 +80,11 @@ def get_next_page(web_page)
   if crawled_pages.count == 0
     web_page['pages'][0]
   else
-    (web_page['pages'] - crawled_pages.map{|page| page['slug']})[0]
+    left_pages = web_page['pages'] - crawled_pages.map{|page| page['slug']}
+    if left_pages.size == 0
+      final_reduce(crawled_pages)  
+    else
+      left_pages[0]
+    end
   end
 end
